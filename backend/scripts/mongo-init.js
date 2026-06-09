@@ -1,0 +1,11 @@
+db = db.getSiblingDB('pulmoscan');
+db.createCollection('users');
+db.createCollection('patients');
+db.createCollection('ct_scans');
+db.createCollection('predictions');
+db.createCollection('reports');
+db.createCollection('appointments');
+db.createCollection('notifications');
+db.createCollection('audit_logs');
+db.createCollection('activities');
+print('PulmoScan database initialized');

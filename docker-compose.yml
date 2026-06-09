@@ -1,0 +1,60 @@
+version: "3.9"
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: pulmoscan_mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-pulmoscan_secret}
+      MONGO_INITDB_DATABASE: pulmoscan
+    volumes:
+      - mongodb_data:/data/db
+      - ./backend/scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    ports:
+      - "27017:27017"
+    networks:
+      - pulmoscan_net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pulmoscan_backend
+    restart: unless-stopped
+    env_file: ./backend/.env
+    environment:
+      - MONGODB_URL=mongodb://admin:pulmoscan_secret@mongodb:27017/pulmoscan?authSource=admin
+    volumes:
+      - ./backend/uploads:/app/uploads
+      - ./ml_model/weights:/app/ml_model/weights
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongodb
+    networks:
+      - pulmoscan_net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: pulmoscan_frontend
+    restart: unless-stopped
+    env_file: ./frontend/.env.local
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - pulmoscan_net
+
+volumes:
+  mongodb_data:
+
+networks:
+  pulmoscan_net:
+    driver: bridge
