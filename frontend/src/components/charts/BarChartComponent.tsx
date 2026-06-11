@@ -45,7 +45,7 @@ export function MonthlyActivityChart({ data }: MonthlyChartProps) {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: { labels: { color: textColor, boxRadius: 4 } },
+          legend: { labels: { color: textColor } },
           tooltip: { mode: "index", intersect: false },
         },
         scales: {
@@ -88,7 +88,7 @@ export function CancerDistributionChart({ data }: CancerDistProps) {
         plugins: {
           legend: {
             position: "bottom",
-            labels: { padding: 16, boxWidth: 12, boxRadius: 4 },
+            labels: { padding: 16, boxWidth: 12 },
           },
           tooltip: {
             callbacks: {

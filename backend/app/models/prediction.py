@@ -1,5 +1,5 @@
 from beanie import Document
-from pydantic import Field
+from pydantic import Field, ConfigDict
 from typing import Optional, Dict, List
 from datetime import datetime, timezone
 from enum import Enum
@@ -16,6 +16,8 @@ class CancerType(str, Enum):
 
 
 class Prediction(Document):
+    model_config = ConfigDict(protected_namespaces=())
+
     ct_scan_id: str
     patient_id: str
     performed_by: str              # junior doctor id

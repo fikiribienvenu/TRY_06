@@ -85,6 +85,13 @@ export const ctScansApi = {
   list: (params?: any) => api.get("/ct-scans", { params }),
   get: (id: string) => api.get(`/ct-scans/${id}`),
   request: (data: FormData) => api.post("/ct-scans/request", data, { headers: { "Content-Type": "multipart/form-data" } }),
+  createForPatient: (patientId: string, doctorId: string, notes?: string) => {
+    const fd = new FormData();
+    fd.append("patient_id", patientId);
+    fd.append("doctor_id", doctorId);
+    if (notes) fd.append("notes", notes);
+    return api.post("/ct-scans/request", fd, { headers: { "Content-Type": "multipart/form-data" } });
+  },
   upload: (scanId: string, file: File) => {
     const formData = new FormData();
     formData.append("file", file);
@@ -104,8 +111,12 @@ export const reportsApi = {
   queue: () => api.get("/reports/queue"),
   review: (id: string, data: any) => api.post(`/reports/${id}/review`, data),
   publish: (id: string) => api.post(`/reports/${id}/publish`),
+  activitySummary: (data: { notes?: string; period?: string }) =>
+    api.post("/reports/activity-summary", data),
   downloadPdf: (id: string) =>
     api.get(`/reports/${id}/pdf`, { responseType: "blob" }),
+  exportCsv: (params?: any) =>
+    api.get("/reports/export-csv", { params, responseType: "blob" }),
 };
 
 // Appointments
@@ -113,6 +124,16 @@ export const appointmentsApi = {
   list: (params?: any) => api.get("/appointments", { params }),
   create: (data: any) => api.post("/appointments", data),
   update: (id: string, data: any) => api.patch(`/appointments/${id}`, data),
+  confirm: (id: string, data: { slot_id: string; notes?: string }) =>
+    api.post(`/appointments/${id}/confirm`, data),
+  reject: (id: string, data: { reason: string; next_available?: string }) =>
+    api.post(`/appointments/${id}/reject`, data),
+};
+
+// Schedule
+export const scheduleApi = {
+  getDoctors: () => api.get("/schedule/doctors"),
+  getSlots: (params?: any) => api.get("/schedule/slots", { params }),
 };
 
 // Analytics

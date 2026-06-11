@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import type { UserRole } from "@/types";
@@ -13,8 +13,15 @@ interface AuthGuardProps {
 export function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
   const router = useRouter();
   const { isAuthenticated, user, mustChangePassword } = useAuthStore();
+  const [hydrated, setHydrated] = useState(false);
+
+  // Wait for Zustand persist to rehydrate from localStorage before checking auth
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   useEffect(() => {
+    if (!hydrated) return;
     if (!isAuthenticated) {
       router.replace("/login");
       return;
@@ -26,7 +33,10 @@ export function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
     if (allowedRoles && user && !allowedRoles.includes(user.role as UserRole)) {
       router.replace("/");
     }
-  }, [isAuthenticated, user, mustChangePassword, allowedRoles, router]);
+  }, [hydrated, isAuthenticated, user, mustChangePassword, allowedRoles, router]);
+
+  // Still waiting for hydration
+  if (!hydrated) return <PageLoader />;
 
   if (!isAuthenticated || !user) return <PageLoader />;
   if (mustChangePassword) return <PageLoader />;

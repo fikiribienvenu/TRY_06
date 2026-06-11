@@ -27,6 +27,12 @@ backend/uploads/
 ml_model/data/
 ml_model/weights/
 
+# Model weights (too large for GitHub)
+*.h5
+*.keras
+*.pkl
+*.joblib
+
 # Node
 node_modules/
 .next/

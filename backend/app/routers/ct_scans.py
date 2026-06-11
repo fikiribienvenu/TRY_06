@@ -28,10 +28,12 @@ async def request_ct_scan(
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
 
+    assigned_doctor_id = doctor_id or patient.assigned_doctor_id
+
     scan = CTScan(
         patient_id=patient_id,
         requested_by=str(actor.id),
-        assigned_doctor_id=doctor_id or patient.assigned_doctor_id,
+        assigned_doctor_id=assigned_doctor_id,
         priority=priority,
         notes=notes,
         scan_date=datetime.fromisoformat(scan_date) if scan_date else None,
@@ -39,7 +41,7 @@ async def request_ct_scan(
         file_name="",
         file_type="",
         file_size_kb=0,
-        status=ScanStatus.ASSIGNED if (doctor_id or patient.assigned_doctor_id) else ScanStatus.PENDING,
+        status=ScanStatus.ASSIGNED if assigned_doctor_id else ScanStatus.PENDING,
     )
     await scan.insert()
     return {"scan_id": str(scan.id), "status": scan.status}
@@ -123,11 +125,17 @@ async def run_prediction(
         resource_id=str(prediction.id),
     )
 
+    heatmap_url = None
+    if heatmap_path:
+        heatmap_url = "/" + heatmap_path.replace("\\", "/")
+
     return {
+        "prediction_id": str(prediction.id),
         "prediction": label,
         "confidence": confidence,
         "class_probabilities": probs,
         "heatmap_generated": heatmap_path is not None,
+        "heatmap_url": heatmap_url,
         "timestamp": datetime.now(timezone.utc).date().isoformat(),
     }
 

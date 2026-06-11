@@ -4,6 +4,11 @@ from datetime import datetime
 from app.models.report import ReportStatus
 
 
+class ActivitySummaryCreate(BaseModel):
+    notes: Optional[str] = None
+    period: str = "Overall"
+
+
 class ReportCreate(BaseModel):
     ct_scan_id: str
     prediction_id: str

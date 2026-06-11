@@ -11,6 +11,7 @@ import sys
 from app.config import settings
 from app.database import connect_db, disconnect_db
 from app.routers import auth, users, patients, ct_scans, reports, appointments, analytics, notifications
+from app.routers import schedule, predictions
 
 
 # Configure loguru
@@ -44,7 +45,7 @@ async def lifespan(app: FastAPI):
 
 async def _bootstrap_director():
     from app.models.user import User, UserRole
-    from app.core.security import hash_password
+    from app.core.security import hash_password, verify_password
     existing = await User.find_one(User.role == UserRole.DIRECTOR)
     if not existing:
         director = User(
@@ -58,6 +59,13 @@ async def _bootstrap_director():
         )
         await director.insert()
         logger.success(f"Director account bootstrapped: {settings.DIRECTOR_EMAIL}")
+    else:
+        # Keep credentials in sync with .env — allows password reset by restarting
+        if not verify_password(settings.DIRECTOR_DEFAULT_PASSWORD, existing.hashed_password):
+            existing.hashed_password = hash_password(settings.DIRECTOR_DEFAULT_PASSWORD)
+            existing.email = settings.DIRECTOR_EMAIL
+            await existing.save()
+            logger.info(f"Director credentials synced from .env: {settings.DIRECTOR_EMAIL}")
 
 
 app = FastAPI(
@@ -103,6 +111,8 @@ app.include_router(reports.router, prefix=API)
 app.include_router(appointments.router, prefix=API)
 app.include_router(analytics.router, prefix=API)
 app.include_router(notifications.router, prefix=API)
+app.include_router(schedule.router, prefix=API)
+app.include_router(predictions.router, prefix=API)
 
 
 @app.get("/api/health")

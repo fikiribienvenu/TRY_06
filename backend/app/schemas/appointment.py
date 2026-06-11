@@ -30,6 +30,7 @@ class AppointmentResponse(BaseModel):
     scheduled_at: Optional[datetime] = None
     duration_minutes: int
     notes: Optional[str] = None
+    ct_scan_id: Optional[str] = None
     created_at: datetime
 
     model_config = {"from_attributes": True}

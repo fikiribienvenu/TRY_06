@@ -1,13 +1,12 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { useAuthStore } from "@/store/authStore";
-import { authApi } from "@/lib/api";
+import { authApi, notificationsApi } from "@/lib/api";
 import { formatRole, generateInitials } from "@/lib/utils";
-import { useQuery } from "@tanstack/react-query";
-import { notificationsApi } from "@/lib/api";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import {
   LayoutDashboard, Users, UserPlus, FileText, Activity, Calendar,
@@ -35,13 +34,14 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { href: "/receptionist/patients", label: "Patients", icon: <Users className="w-5 h-5" /> },
     { href: "/receptionist/register", label: "Register Patient", icon: <UserPlus className="w-5 h-5" /> },
     { href: "/receptionist/appointments", label: "Appointments", icon: <Calendar className="w-5 h-5" /> },
-    { href: "/receptionist/scans", label: "CT Scan Requests", icon: <Scan className="w-5 h-5" /> },
+    { href: "/receptionist/scans", label: "Scan Status", icon: <Scan className="w-5 h-5" /> },
   ],
   junior_doctor: [
     { href: "/junior-doctor", label: "Dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
     { href: "/junior-doctor/patients", label: "My Patients", icon: <Users className="w-5 h-5" /> },
     { href: "/junior-doctor/scans", label: "CT Scans", icon: <Scan className="w-5 h-5" /> },
     { href: "/junior-doctor/reports", label: "My Reports", icon: <ClipboardList className="w-5 h-5" /> },
+    { href: "/junior-doctor/schedule", label: "My Schedule", icon: <Calendar className="w-5 h-5" /> },
   ],
   senior_doctor: [
     { href: "/senior-doctor", label: "Dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
@@ -72,6 +72,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { user, clearAuth } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [showNotifs, setShowNotifs] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setShowNotifs(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const qc = useQueryClient();
 
   const { data: notifData } = useQuery({
     queryKey: ["notifications-unread"],
@@ -79,6 +94,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     refetchInterval: 30000,
   });
   const unreadCount = notifData?.data?.unread_count ?? 0;
+
+  const { data: notifList } = useQuery({
+    queryKey: ["notifications-list"],
+    queryFn: () => notificationsApi.list({ page_size: 10 }),
+    enabled: showNotifs,
+    refetchInterval: showNotifs ? 10000 : false,
+  });
+  const notifications = notifList?.data?.notifications ?? [];
+
+  const markAllMutation = useMutation({
+    mutationFn: () => notificationsApi.markAllRead(),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["notifications-unread"] });
+      qc.invalidateQueries({ queryKey: ["notifications-list"] });
+    },
+  });
+
+  const markOneMutation = useMutation({
+    mutationFn: (id: string) => notificationsApi.markRead(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["notifications-unread"] });
+      qc.invalidateQueries({ queryKey: ["notifications-list"] });
+    },
+  });
 
   const navItems = NAV_ITEMS[user?.role as UserRole] ?? [];
 
@@ -198,17 +237,82 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           <div className="flex items-center gap-3">
-            <Link
-              href={`/${user.role.replace("_", "-")}/notifications`}
-              className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
-            >
-              <Bell className="w-5 h-5" />
-              {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                  {unreadCount > 9 ? "9+" : unreadCount}
-                </span>
+            {/* ── Notification Bell with Dropdown ── */}
+            <div className="relative" ref={notifRef}>
+              <button
+                onClick={() => setShowNotifs(!showNotifs)}
+                className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition"
+              >
+                <Bell className="w-5 h-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {showNotifs && (
+                <div className="absolute right-0 mt-2 w-80 bg-card border border-border rounded-xl shadow-2xl z-50 overflow-hidden">
+                  {/* Header */}
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/40">
+                    <span className="font-semibold text-sm">Notifications</span>
+                    {unreadCount > 0 && (
+                      <button
+                        onClick={() => markAllMutation.mutate()}
+                        className="text-xs text-primary hover:underline"
+                      >
+                        Mark all read
+                      </button>
+                    )}
+                  </div>
+
+                  {/* List */}
+                  <div className="max-h-80 overflow-y-auto divide-y divide-border">
+                    {notifications.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Bell className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                        <p className="text-sm">No notifications</p>
+                      </div>
+                    ) : notifications.map((n: any) => (
+                      <div
+                        key={n.id}
+                        onClick={() => { if (!n.is_read) markOneMutation.mutate(n.id); }}
+                        className={`px-4 py-3 cursor-pointer hover:bg-muted/40 transition ${
+                          !n.is_read ? "bg-blue-50/50 dark:bg-blue-900/10" : ""
+                        }`}
+                      >
+                        <div className="flex items-start gap-2">
+                          {!n.is_read && (
+                            <span className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1.5" />
+                          )}
+                          <div className={!n.is_read ? "" : "pl-4"}>
+                            <p className="text-sm font-medium leading-tight">{n.title}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{n.message}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {new Date(n.created_at).toLocaleDateString("en-US", {
+                                month: "short", day: "numeric",
+                                hour: "2-digit", minute: "2-digit",
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Footer */}
+                  <div className="px-4 py-2.5 border-t border-border bg-muted/20 text-center">
+                    <button
+                      onClick={() => setShowNotifs(false)}
+                      className="text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
               )}
-            </Link>
+            </div>
+
             <div className={`w-8 h-8 rounded-full ${ROLE_COLORS[user.role as UserRole]} flex items-center justify-center text-xs font-bold text-white`}>
               {generateInitials(user.full_name)}
             </div>

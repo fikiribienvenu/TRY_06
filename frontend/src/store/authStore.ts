@@ -30,8 +30,8 @@ export const useAuthStore = create<AuthStore>()(
       mustChangePassword: false,
 
       setAuth: ({ user, accessToken, refreshToken, mustChangePassword }) => {
-        Cookies.set("access_token", accessToken, { expires: 1, secure: true, sameSite: "strict" });
-        Cookies.set("refresh_token", refreshToken, { expires: 7, secure: true, sameSite: "strict" });
+        Cookies.set("access_token", accessToken, { expires: 1 });
+        Cookies.set("refresh_token", refreshToken, { expires: 7 });
         set({ user, accessToken, refreshToken, isAuthenticated: true, mustChangePassword });
       },
 

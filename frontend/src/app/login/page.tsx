@@ -43,13 +43,12 @@ export default function LoginPage() {
       const res = await authApi.login(data.email, data.password);
       const { access_token, refresh_token, role, user_id, full_name, must_change_password } = res.data;
 
-      const meRes = await authApi.me();
       const user: User = {
         id: user_id,
         email: data.email,
         full_name,
-        first_name: meRes.data.full_name?.split(" ")[0] ?? "",
-        last_name: meRes.data.full_name?.split(" ").slice(1).join(" ") ?? "",
+        first_name: full_name?.split(" ")[0] ?? "",
+        last_name: full_name?.split(" ").slice(1).join(" ") ?? "",
         role,
         is_active: true,
         must_change_password,
@@ -60,12 +59,12 @@ export default function LoginPage() {
 
       if (must_change_password) {
         toast("Please change your password before continuing.", { icon: "🔐" });
-        router.push("/change-password");
+        window.location.href = "/change-password";
         return;
       }
 
       toast.success(`Welcome, ${full_name}!`);
-      router.push(ROLE_ROUTES[role] ?? "/");
+      window.location.href = ROLE_ROUTES[role] ?? "/";
     } catch (err) {
       toast.error(handleApiError(err));
     } finally {

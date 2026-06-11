@@ -80,6 +80,18 @@ async def create_user(
     return _user_to_response(user)
 
 
+@router.get("/junior-doctors/list")
+async def list_junior_doctors(
+    actor: User = Depends(require_role(Role.DIRECTOR, Role.RECEPTIONIST)),
+):
+    """Public-ish endpoint — Receptionists need this to assign patients to doctors."""
+    doctors = await User.find(
+        User.role == UserRole.JUNIOR_DOCTOR,
+        User.is_active == True,
+    ).to_list()
+    return {"users": [_user_to_response(d) for d in doctors]}
+
+
 @router.get("", response_model=UserListResponse)
 async def list_users(
     role: Optional[str] = Query(None),

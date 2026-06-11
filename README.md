@@ -32,37 +32,152 @@ Production-ready AI-powered web application for lung cancer prediction using CT 
 
 ---
 
-## Quick Start
+## Running Locally (No Docker)
 
-### 1. Clone & Configure
+### Prerequisites
 
-```bash
-cp .env.example backend/.env
-# Edit backend/.env with your MONGODB_URL, SMTP config, GEMINI_API_KEY
-```
+| Tool | Version | Notes |
+|------|---------|-------|
+| Node.js | 18+ | https://nodejs.org |
+| Python | 3.11+ | https://python.org |
+| MongoDB Community | 7.0 | https://www.mongodb.com/try/download/community — must be running before starting backend |
 
-### 2. Run with Docker Compose
+---
 
-```bash
-docker-compose up --build
-```
+### 1. Clone
 
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:8000
-- **Swagger Docs**: http://localhost:8000/api/docs
-
-### 3. First Login
-
-```
-Email: director@pulmoscan.ai
-Password: Director@2024!
+```powershell
+git clone https://github.com/fikiribienvenu/TRY_06.git
+cd TRY_06
 ```
 
 ---
 
-## ML Model Setup
+### 2. Backend
 
-### Download Dataset
+```powershell
+cd backend
+
+# Create virtual environment
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1        # Windows PowerShell
+# source .venv/bin/activate          # macOS / Linux
+
+# Install dependencies (lightweight — no TensorFlow required for dev)
+pip install -r requirements-dev.txt
+
+# Copy environment file
+Copy-Item .env.example .env          # Windows
+# cp .env.example .env               # macOS / Linux
+```
+
+**Edit `backend/.env`** — the defaults below work for local dev with no extra services needed:
+
+```env
+MONGODB_URL=mongodb://localhost:27017/pulmoscan
+JWT_SECRET_KEY=change-this-in-production
+JWT_REFRESH_SECRET_KEY=change-this-refresh-key-too
+ENVIRONMENT=development
+
+# Leave blank — credentials are printed to the server log during dev
+SMTP_HOST=
+SMTP_PORT=587
+SMTP_USER=
+SMTP_PASSWORD=
+
+# Leave blank — fallback static text is used instead of AI-generated explanations
+GEMINI_API_KEY=
+
+# Director account bootstrapped automatically on first startup
+DIRECTOR_EMAIL=director@pulmoscan.ai
+DIRECTOR_PASSWORD=Director@2024!
+```
+
+**Start the backend:**
+
+```powershell
+# Option A — from inside backend/ with .venv active
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+# Option B — convenience script from project root
+.\start-backend.ps1
+```
+
+Verify: http://localhost:8000/api/health should return `{"status":"healthy"}`
+
+---
+
+### 3. Frontend
+
+Open a **second terminal**:
+
+```powershell
+cd frontend
+npm install --legacy-peer-deps
+npm run dev
+
+# Or from project root:
+# .\start-frontend.ps1
+```
+
+---
+
+### 4. Open the app
+
+| URL | Description |
+|-----|-------------|
+| http://localhost:3000 | Web application |
+| http://localhost:8000/api/docs | Swagger / OpenAPI interactive docs |
+| http://localhost:8000/api/health | Backend health check |
+
+---
+
+### 5. First login
+
+```
+Email:    director@pulmoscan.ai
+Password: Director@2026!
+```
+
+The Director account is created automatically when the backend starts for the first time.
+To reset the password, update `DIRECTOR_DEFAULT_PASSWORD` in `backend/.env` and restart the backend — credentials are synced on every startup.
+From the Director dashboard you can create staff accounts (Senior Doctor, Junior Doctor, Receptionist).
+Each new staff member receives a temporary password and must change it on first login.
+
+---
+
+### Creating accounts for each role
+
+| Role | How to create |
+|------|--------------|
+| Director | Auto-bootstrapped on backend startup |
+| Senior Doctor | Director dashboard → Users → Add User |
+| Junior Doctor | Director dashboard → Users → Add User |
+| Receptionist | Director dashboard → Users → Add User |
+| Patient | Receptionist dashboard → Register Patient |
+
+---
+
+## Running with Docker
+
+Requires Docker Desktop.
+
+```bash
+cp .env.example backend/.env
+# Edit backend/.env with your MONGODB_URL, SMTP config, GEMINI_API_KEY
+docker-compose up --build
+```
+
+- **Frontend**: http://localhost:3000
+- **Backend API / Swagger**: http://localhost:8000/api/docs
+
+---
+
+## ML Model Setup (Optional)
+
+Without the trained model the system uses realistic mock predictions for demo purposes.
+
+### Download dataset
 
 ```bash
 cd ml_model
@@ -79,15 +194,13 @@ python download_dataset.py
 - Normal (No Cancer)
 - Squamous Cell Carcinoma
 
-### Train Model
+### Train model
 
 ```bash
 python train.py
-# Trained model saved to: ml_model/weights/lung_cancer_model.h5
+# Output: ml_model/weights/lung_cancer_model.h5
 # Copy to: backend/ml_model/weights/lung_cancer_model.h5
 ```
-
-> **Without trained model**: The system uses realistic mock predictions for demo purposes.
 
 ---
 
@@ -98,34 +211,34 @@ TRY_06/
 ├── backend/
 │   ├── app/
 │   │   ├── main.py              # FastAPI app + lifespan
-│   │   ├── config.py            # Settings (Pydantic)
-│   │   ├── database.py          # MongoDB/Beanie connection
+│   │   ├── config.py            # Settings (Pydantic BaseSettings)
+│   │   ├── database.py          # MongoDB / Beanie connection
 │   │   ├── models/              # Beanie document models
 │   │   ├── schemas/             # Pydantic request/response schemas
 │   │   ├── routers/             # API route handlers
-│   │   ├── services/            # Business logic layer
-│   │   ├── core/                # Auth, security, permissions
-│   │   ├── ai/                  # ML model loader + predictor + GradCAM
-│   │   └── utils/               # File handling, PDF, helpers
-│   ├── scripts/mongo-init.js
-│   ├── requirements.txt
+│   │   ├── services/            # Business logic (email, PDF, Gemini)
+│   │   ├── core/                # Auth, security, permissions, dependencies
+│   │   ├── ai/                  # ML model loader + predictor + Grad-CAM
+│   │   └── utils/               # File handling, helpers
+│   ├── requirements-dev.txt     # Lightweight deps (no TensorFlow)
+│   ├── requirements.txt         # Full deps including TensorFlow
 │   └── Dockerfile
 │
 ├── frontend/
 │   ├── src/
 │   │   ├── app/                 # Next.js App Router pages
-│   │   │   ├── login/           # Login page
-│   │   │   ├── change-password/ # First-login password change
-│   │   │   ├── director/        # Director dashboard + user mgmt + reports
-│   │   │   ├── receptionist/    # Reception dashboard + patient reg
-│   │   │   ├── junior-doctor/   # CT upload + AI prediction + reports
-│   │   │   ├── senior-doctor/   # Review queue + approve/publish
-│   │   │   └── patient/         # Patient portal + PDF download
+│   │   │   ├── login/
+│   │   │   ├── change-password/
+│   │   │   ├── director/
+│   │   │   ├── receptionist/
+│   │   │   ├── junior-doctor/
+│   │   │   ├── senior-doctor/
+│   │   │   └── patient/
 │   │   ├── components/
 │   │   │   ├── layout/          # DashboardLayout, AuthGuard, Sidebar
-│   │   │   ├── charts/          # Chart.js components
-│   │   │   └── ui/              # StatCard, Badge, LoadingSpinner
-│   │   ├── lib/                 # API client (axios), utils
+│   │   │   ├── charts/          # Chart.js wrappers
+│   │   │   └── ui/              # Shared UI components
+│   │   ├── lib/                 # Axios API client
 │   │   ├── store/               # Zustand auth store
 │   │   └── types/               # TypeScript types
 │   ├── package.json
@@ -133,9 +246,11 @@ TRY_06/
 │
 ├── ml_model/
 │   ├── download_dataset.py      # Kaggle dataset downloader + organizer
-│   ├── train.py                 # EfficientNetB3 training (2-phase)
+│   ├── train.py                 # EfficientNetB3 two-phase training
 │   └── requirements.txt
 │
+├── start-backend.ps1            # One-click backend start (PowerShell)
+├── start-frontend.ps1           # One-click frontend start (PowerShell)
 ├── docker-compose.yml
 └── README.md
 ```
@@ -159,8 +274,8 @@ TRY_06/
 | POST | `/api/v1/ct-scans/{id}/predict` | Run AI prediction |
 | POST | `/api/v1/reports` | Create report |
 | POST | `/api/v1/reports/{id}/submit` | Submit to senior doctor |
-| GET | `/api/v1/reports/queue` | Get review queue |
-| POST | `/api/v1/reports/{id}/review` | Approve/reject/re-evaluate |
+| GET | `/api/v1/reports/queue` | Senior doctor review queue |
+| POST | `/api/v1/reports/{id}/review` | Approve / reject / re-evaluate |
 | POST | `/api/v1/reports/{id}/publish` | Publish + notify patient |
 | GET | `/api/v1/reports/{id}/pdf` | Download report PDF |
 | GET | `/api/v1/analytics/dashboard` | Director dashboard stats |
@@ -191,7 +306,7 @@ Full interactive docs: **http://localhost:8000/api/docs**
 
 ## Security Features
 
-- JWT access tokens (30min) + refresh tokens (7 days)
+- JWT access tokens (30 min) + refresh tokens (7 days)
 - bcrypt password hashing (cost factor 12)
 - Role-Based Access Control (5 roles, granular permissions)
 - Forced password change on first login
@@ -205,14 +320,19 @@ Full interactive docs: **http://localhost:8000/api/docs**
 
 ## Environment Variables
 
-See `backend/.env.example` for all required variables.
+See `backend/.env.example` for all variables.
 
 Key variables:
-- `MONGODB_URL` — MongoDB connection string
-- `JWT_SECRET_KEY` — Change in production!
-- `SMTP_*` — Email server for credential delivery
-- `GEMINI_API_KEY` — Google AI Studio API key
-- `DIRECTOR_EMAIL/PASSWORD` — Bootstrap director account
+
+| Variable | Description |
+|----------|-------------|
+| `MONGODB_URL` | MongoDB connection string |
+| `JWT_SECRET_KEY` | Access token signing key — change in production |
+| `JWT_REFRESH_SECRET_KEY` | Refresh token signing key — change in production |
+| `SMTP_HOST/PORT/USER/PASSWORD` | Email server for credential delivery |
+| `GEMINI_API_KEY` | Google AI Studio key for report explanations |
+| `DIRECTOR_EMAIL` | Bootstrap director account email |
+| `DIRECTOR_PASSWORD` | Bootstrap director account password |
 
 ---
 
