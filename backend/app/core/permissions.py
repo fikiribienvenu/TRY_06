@@ -5,7 +5,7 @@ from typing import Set
 class Role(str, Enum):
     DIRECTOR = "director"
     SENIOR_DOCTOR = "senior_doctor"
-    JUNIOR_DOCTOR = "junior_doctor"
+    RADIOLOGIST = "radiologist"
     RECEPTIONIST = "receptionist"
     PATIENT = "patient"
 
@@ -24,11 +24,12 @@ ROLE_PERMISSIONS: dict[str, Set[str]] = {
         "reports:publish", "recommendations:create",
         "appointments:read",
     },
-    Role.JUNIOR_DOCTOR: {
+    Role.RADIOLOGIST: {
         "patients:read", "ct_scans:create", "ct_scans:read",
         "predictions:create", "predictions:read",
         "reports:create", "reports:read",
         "appointments:read",
+        "schedule:manage",
     },
     Role.RECEPTIONIST: {
         "patients:create", "patients:read", "patients:update",
@@ -50,6 +51,6 @@ def has_permission(role: str, permission: str) -> bool:
 
 
 CREATABLE_ROLES_BY = {
-    Role.DIRECTOR: [Role.JUNIOR_DOCTOR, Role.SENIOR_DOCTOR, Role.RECEPTIONIST],
+    Role.DIRECTOR: [Role.RADIOLOGIST, Role.SENIOR_DOCTOR, Role.RECEPTIONIST],
     Role.RECEPTIONIST: [Role.PATIENT],
 }

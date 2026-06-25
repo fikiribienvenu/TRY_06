@@ -36,7 +36,7 @@ async def get_dashboard_stats(actor: User = Depends(require_role(Role.DIRECTOR))
     monthly_scans = await CTScan.find(CTScan.created_at >= month_start).count()
 
     from app.models.user import UserRole
-    junior_docs = await User.find(User.role == UserRole.JUNIOR_DOCTOR, User.is_active == True).count()
+    junior_docs = await User.find(User.role == UserRole.RADIOLOGIST, User.is_active == True).count()
     senior_docs = await User.find(User.role == UserRole.SENIOR_DOCTOR, User.is_active == True).count()
     receptionists = await User.find(User.role == UserRole.RECEPTIONIST, User.is_active == True).count()
 
@@ -56,7 +56,7 @@ async def get_dashboard_stats(actor: User = Depends(require_role(Role.DIRECTOR))
             "scans": monthly_scans,
         },
         "staff": {
-            "junior_doctors": junior_docs,
+            "radiologists": junior_docs,
             "senior_doctors": senior_docs,
             "receptionists": receptionists,
         },
@@ -130,7 +130,7 @@ async def get_audit_logs(
     actor: User = Depends(require_role(Role.DIRECTOR)),
 ):
     total = await AuditLog.count()
-    logs = await AuditLog.find().sort(-AuditLog.created_at).skip(
+    logs = await AuditLog.find().sort("-created_at").skip(
         (page - 1) * page_size
     ).limit(page_size).to_list()
 

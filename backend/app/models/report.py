@@ -19,7 +19,7 @@ class Report(Document):
     patient_id: str
     ct_scan_id: str
     prediction_id: str
-    junior_doctor_id: str
+    radiologist_id: str
     senior_doctor_id: Optional[str] = None
     status: ReportStatus = ReportStatus.DRAFT
     junior_notes: Optional[str] = None
@@ -37,4 +37,4 @@ class Report(Document):
 
     class Settings:
         name = "reports"
-        indexes = ["patient_id", "ct_scan_id", "junior_doctor_id", "senior_doctor_id", "status"]
+        indexes = ["patient_id", "ct_scan_id", "radiologist_id", "senior_doctor_id", "status"]

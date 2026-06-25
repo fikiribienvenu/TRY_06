@@ -8,7 +8,7 @@ from app.core.security import hash_password, generate_random_password
 from app.core.permissions import CREATABLE_ROLES_BY, Role
 from app.services import email_service, audit_service
 from app.models.audit_log import AuditAction
-from beanie.operators import In, RegEx
+from beanie.operators import In
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -80,13 +80,13 @@ async def create_user(
     return _user_to_response(user)
 
 
-@router.get("/junior-doctors/list")
-async def list_junior_doctors(
+@router.get("/radiologists/list")
+async def list_radiologists(
     actor: User = Depends(require_role(Role.DIRECTOR, Role.RECEPTIONIST)),
 ):
-    """Public-ish endpoint — Receptionists need this to assign patients to doctors."""
+    """Public-ish endpoint — Receptionists need this to assign patients to radiologists."""
     doctors = await User.find(
-        User.role == UserRole.JUNIOR_DOCTOR,
+        User.role == UserRole.RADIOLOGIST,
         User.is_active == True,
     ).to_list()
     return {"users": [_user_to_response(d) for d in doctors]}
@@ -101,14 +101,20 @@ async def list_users(
     page_size: int = Query(20, ge=1, le=100),
     actor: User = Depends(require_role(Role.DIRECTOR)),
 ):
-    query = User.find()
+    filter_q: dict = {}
     if role:
-        query = User.find(User.role == role)
+        filter_q["role"] = role
     if is_active is not None:
-        query = query.find(User.is_active == is_active)
+        filter_q["is_active"] = is_active
+    if search:
+        filter_q["$or"] = [
+            {"first_name": {"$regex": search, "$options": "i"}},
+            {"last_name": {"$regex": search, "$options": "i"}},
+            {"email": {"$regex": search, "$options": "i"}},
+        ]
 
-    total = await query.count()
-    users = await query.skip((page - 1) * page_size).limit(page_size).to_list()
+    total = await User.find(filter_q).count()
+    users = await User.find(filter_q).skip((page - 1) * page_size).limit(page_size).to_list()
 
     return UserListResponse(
         users=[_user_to_response(u) for u in users],

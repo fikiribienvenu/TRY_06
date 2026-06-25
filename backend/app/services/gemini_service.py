@@ -78,7 +78,7 @@ Generate concise treatment recommendations.
 
 Finding: {prediction} (confidence: {confidence:.1f}%)
 Patient: {patient_age}yr {patient_gender}
-Junior Doctor Notes: {junior_notes or 'None'}
+Radiologist Notes: {junior_notes or 'None'}
 Senior Doctor Notes: {senior_notes or 'None'}
 
 Return ONLY a numbered list of 3-6 specific clinical recommendations.

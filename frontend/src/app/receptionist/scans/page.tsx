@@ -61,7 +61,7 @@ export default function ReceptionistScansPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">CT Scan Requests</h1>
-          <p className="text-muted-foreground text-sm">{total} total — uploading &amp; analysis done by the Junior Doctor</p>
+          <p className="text-muted-foreground text-sm">{total} total — uploading &amp; analysis done by the Radiologist</p>
         </div>
         <button
           onClick={() => setShowModal(true)}
@@ -75,8 +75,8 @@ export default function ReceptionistScansPage() {
       <div className="flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl text-sm text-blue-700 dark:text-blue-300">
         <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
         <p>
-          Your role is to <strong>request CT scans</strong> for patients and assign them to a Junior Doctor.
-          The Junior Doctor will upload the lung image, run the AI prediction, and submit a report.
+          Your role is to <strong>request CT scans</strong> for patients and assign them to a Radiologist.
+          The Radiologist will upload the lung image, run the AI prediction, and submit a report.
         </p>
       </div>
 

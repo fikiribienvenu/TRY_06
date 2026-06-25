@@ -17,7 +17,7 @@ class DayOfWeek(str, Enum):
 
 class ScheduleSlot(Document):
     """
-    A specific date+time slot set by a Junior Doctor.
+    A specific date+time slot set by a Radiologist.
     Each slot has a capacity (max_patients). When a patient is booked,
     booked_count is incremented. Full slots are hidden from the receptionist.
     """

@@ -8,7 +8,7 @@ import Link from "next/link";
 import { formatDate } from "@/lib/utils";
 import { useState } from "react";
 
-export default function JuniorDoctorReportsPage() {
+export default function RadiologistReportsPage() {
   const [page, setPage] = useState(1);
 
   const { data, isLoading } = useQuery({
@@ -31,7 +31,7 @@ export default function JuniorDoctorReportsPage() {
         <div className="text-center py-12 text-muted-foreground">
           <ClipboardList className="w-12 h-12 mx-auto mb-3 opacity-30" />
           <p>No reports created yet</p>
-          <Link href="/junior-doctor/scans" className="text-primary text-sm hover:underline mt-2 block">
+          <Link href="/radiologist/scans" className="text-primary text-sm hover:underline mt-2 block">
             Go to CT Scans to create a report
           </Link>
         </div>
@@ -55,7 +55,7 @@ export default function JuniorDoctorReportsPage() {
                   <td className="px-4 py-3"><StatusBadge status={r.status} /></td>
                   <td className="px-4 py-3 text-muted-foreground">{formatDate(r.created_at)}</td>
                   <td className="px-4 py-3">
-                    <Link href={`/junior-doctor/scans`} className="text-primary text-xs hover:underline">
+                    <Link href={`/radiologist/scans`} className="text-primary text-xs hover:underline">
                       View
                     </Link>
                   </td>

@@ -26,7 +26,7 @@ Production-ready AI-powered web application for lung cancer prediction using CT 
 |------|-------------|
 | **Director** | User CRUD, analytics dashboard, audit logs, reports |
 | **Senior Doctor** | Review queue, approve/reject/publish reports, Gemini explanations |
-| **Junior Doctor** | Upload CT scans, run AI prediction, create reports |
+| **Radiologist** | Upload CT scans, run AI prediction, create reports |
 | **Receptionist** | Register patients, manage appointments, request CT scans |
 | **Patient** | View published reports, download PDF, request appointments |
 
@@ -141,7 +141,7 @@ Password: Director@2026!
 
 The Director account is created automatically when the backend starts for the first time.
 To reset the password, update `DIRECTOR_DEFAULT_PASSWORD` in `backend/.env` and restart the backend — credentials are synced on every startup.
-From the Director dashboard you can create staff accounts (Senior Doctor, Junior Doctor, Receptionist).
+From the Director dashboard you can create staff accounts (Senior Doctor, Radiologist, Receptionist).
 Each new staff member receives a temporary password and must change it on first login.
 
 ---
@@ -152,7 +152,7 @@ Each new staff member receives a temporary password and must change it on first 
 |------|--------------|
 | Director | Auto-bootstrapped on backend startup |
 | Senior Doctor | Director dashboard → Users → Add User |
-| Junior Doctor | Director dashboard → Users → Add User |
+| Radiologist | Director dashboard → Users → Add User |
 | Receptionist | Director dashboard → Users → Add User |
 | Patient | Receptionist dashboard → Register Patient |
 
@@ -231,7 +231,7 @@ TRY_06/
 │   │   │   ├── change-password/
 │   │   │   ├── director/
 │   │   │   ├── receptionist/
-│   │   │   ├── junior-doctor/
+│   │   │   ├── radiologist/
 │   │   │   ├── senior-doctor/
 │   │   │   └── patient/
 │   │   ├── components/

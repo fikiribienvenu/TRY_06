@@ -26,7 +26,7 @@ export default function SeniorDoctorDashboard() {
   });
 
   const queue   = queueData?.data ?? [];
-  const all     = allReports?.data ?? [];
+  const all     = allReports?.data?.reports ?? (Array.isArray(allReports?.data) ? allReports.data : []);
   const dist    = cancerDist?.data ?? [];
 
   const approved  = all.filter((r: any) => ["approved","published"].includes(r.status)).length;

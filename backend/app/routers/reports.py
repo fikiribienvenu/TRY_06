@@ -27,7 +27,7 @@ def _to_response(r: Report) -> ReportResponse:
         patient_id=r.patient_id,
         ct_scan_id=r.ct_scan_id,
         prediction_id=r.prediction_id,
-        junior_doctor_id=r.junior_doctor_id,
+        radiologist_id=r.radiologist_id,
         senior_doctor_id=r.senior_doctor_id,
         status=r.status,
         junior_notes=r.junior_notes,
@@ -45,7 +45,7 @@ def _to_response(r: Report) -> ReportResponse:
 @router.post("", response_model=ReportResponse, status_code=201)
 async def create_report(
     body: ReportCreate,
-    actor: User = Depends(require_role(Role.JUNIOR_DOCTOR)),
+    actor: User = Depends(require_role(Role.RADIOLOGIST)),
 ):
     scan = await CTScan.get(body.ct_scan_id)
     if not scan or scan.assigned_doctor_id != str(actor.id):
@@ -59,7 +59,7 @@ async def create_report(
         patient_id=scan.patient_id,
         ct_scan_id=body.ct_scan_id,
         prediction_id=body.prediction_id,
-        junior_doctor_id=str(actor.id),
+        radiologist_id=str(actor.id),
         junior_notes=body.junior_notes,
         status=ReportStatus.DRAFT,
     )
@@ -76,10 +76,10 @@ async def create_report(
 async def submit_report(
     report_id: str,
     body: ReportSubmit,
-    actor: User = Depends(require_role(Role.JUNIOR_DOCTOR)),
+    actor: User = Depends(require_role(Role.RADIOLOGIST)),
 ):
     report = await Report.get(report_id)
-    if not report or report.junior_doctor_id != str(actor.id):
+    if not report or report.radiologist_id != str(actor.id):
         raise HTTPException(status_code=403, detail="Report not found or not yours")
 
     report.junior_notes = body.junior_notes
@@ -184,19 +184,19 @@ async def get_review_queue(
     from beanie.operators import In
     reports = await Report.find(
         In(Report.status, [ReportStatus.PENDING_REVIEW, ReportStatus.UNDER_REVIEW, ReportStatus.RE_EVALUATION])
-    ).sort(-Report.created_at).to_list()
+    ).sort("-created_at").to_list()
 
     result = []
     for r in reports:
         patient = await Patient.get(r.patient_id)
-        junior = await User.get(r.junior_doctor_id)
+        junior = await User.get(r.radiologist_id)
         prediction = await Prediction.get(r.prediction_id) if r.prediction_id else None
 
         item = _to_response(r).model_dump()
         item.update({
             "patient_name": patient.full_name if patient else "Unknown",
             "patient_code": patient.patient_id if patient else r.patient_id[-8:],
-            "junior_doctor_name": junior.full_name if junior else "Unknown",
+            "radiologist_name": junior.full_name if junior else "Unknown",
             "prediction_label": prediction.prediction if prediction else None,
             "prediction_confidence": round(prediction.confidence, 1) if prediction else None,
         })
@@ -334,7 +334,7 @@ async def _generate_pdf(report: Report):
     from app.models.user import User as UserModel
     prediction = await Pred.get(report.prediction_id)
     patient = await Patient.get(report.patient_id)
-    junior = await UserModel.get(report.junior_doctor_id)
+    junior = await UserModel.get(report.radiologist_id)
     senior = await UserModel.get(report.senior_doctor_id) if report.senior_doctor_id else None
     scan = await CTScan.get(report.ct_scan_id)
 
@@ -346,7 +346,7 @@ async def _generate_pdf(report: Report):
         ct_scan_date=scan.scan_date.strftime("%Y-%m-%d") if scan and scan.scan_date else "N/A",
         prediction=prediction.prediction if prediction else "Unknown",
         confidence=prediction.confidence if prediction else 0,
-        junior_doctor=junior.full_name if junior else "Unknown",
+        radiologist=junior.full_name if junior else "Unknown",
         senior_doctor=senior.full_name if senior else "Unknown",
         recommendations=report.recommendations,
         gemini_explanation=report.gemini_explanation,
@@ -414,14 +414,14 @@ def _apply_date_filter(filters: list, date_filter: Optional[str]):
 
 async def _enrich_report(r: Report) -> dict:
     patient = await Patient.get(r.patient_id)
-    junior = await User.get(r.junior_doctor_id)
+    junior = await User.get(r.radiologist_id)
     senior = await User.get(r.senior_doctor_id) if r.senior_doctor_id else None
     prediction = await Prediction.get(r.prediction_id) if r.prediction_id else None
     item = _to_response(r).model_dump()
     item.update({
         "patient_name": patient.full_name if patient else None,
         "patient_code": patient.patient_id if patient else None,
-        "junior_doctor_name": junior.full_name if junior else None,
+        "radiologist_name": junior.full_name if junior else None,
         "senior_doctor_name": senior.full_name if senior else None,
         "prediction_label": prediction.prediction if prediction else None,
         "prediction_confidence": round(prediction.confidence, 1) if prediction else None,
@@ -433,7 +433,7 @@ async def _enrich_report(r: Report) -> dict:
 async def export_reports_csv(
     date_filter: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
-    junior_doctor_id: Optional[str] = Query(None),
+    radiologist_id: Optional[str] = Query(None),
     senior_doctor_id: Optional[str] = Query(None),
     actor: User = Depends(require_role(Role.DIRECTOR)),
 ):
@@ -441,25 +441,25 @@ async def export_reports_csv(
     _apply_date_filter(filters, date_filter)
     if status:
         filters.append(Report.status == status)
-    if junior_doctor_id:
-        filters.append(Report.junior_doctor_id == junior_doctor_id)
+    if radiologist_id:
+        filters.append(Report.radiologist_id == radiologist_id)
     if senior_doctor_id:
         filters.append(Report.senior_doctor_id == senior_doctor_id)
 
-    reports = await Report.find(*filters).sort(-Report.created_at).limit(5000).to_list()
+    reports = await Report.find(*filters).sort("-created_at").limit(5000).to_list()
 
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow([
         "Report ID", "Patient Name", "Patient Code",
         "AI Prediction", "Confidence (%)",
-        "Junior Doctor", "Senior Doctor",
+        "Radiologist", "Senior Doctor",
         "Status", "Submitted Date", "Reviewed Date", "Published Date",
     ])
 
     for r in reports:
         patient = await Patient.get(r.patient_id)
-        junior = await User.get(r.junior_doctor_id)
+        junior = await User.get(r.radiologist_id)
         senior = await User.get(r.senior_doctor_id) if r.senior_doctor_id else None
         prediction = await Prediction.get(r.prediction_id) if r.prediction_id else None
         writer.writerow([
@@ -504,8 +504,8 @@ async def get_report(
     result = _to_response(report).model_dump()
 
     if actor.role != UserRole.PATIENT:
-        junior = await User.get(report.junior_doctor_id)
-        result["junior_doctor_name"] = junior.full_name if junior else None
+        junior = await User.get(report.radiologist_id)
+        result["radiologist_name"] = junior.full_name if junior else None
         if report.senior_doctor_id:
             senior = await User.get(report.senior_doctor_id)
             result["senior_doctor_name"] = senior.full_name if senior else None
@@ -519,35 +519,38 @@ async def list_reports(
     status: Optional[str] = Query(None),
     my_reviews: bool = Query(False),
     date_filter: Optional[str] = Query(None),
-    junior_doctor_id: Optional[str] = Query(None),
+    radiologist_id: Optional[str] = Query(None),
     senior_doctor_id: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=500),
     actor: User = Depends(get_current_active_user),
 ):
     filters: list = []
+    director_base_filters: list = []  # filters before status — used for per-status counts
+
     if actor.role == UserRole.PATIENT:
         patient = await Patient.find_one(Patient.user_id == str(actor.id))
         if patient:
             filters.append(Report.patient_id == str(patient.id))
         filters.append(Report.status == ReportStatus.PUBLISHED)
-    elif actor.role == UserRole.JUNIOR_DOCTOR:
-        filters.append(Report.junior_doctor_id == str(actor.id))
+    elif actor.role == UserRole.RADIOLOGIST:
+        filters.append(Report.radiologist_id == str(actor.id))
     elif actor.role == UserRole.SENIOR_DOCTOR and my_reviews:
         filters.append(Report.senior_doctor_id == str(actor.id))
     elif actor.role == UserRole.DIRECTOR:
         _apply_date_filter(filters, date_filter)
-        if junior_doctor_id:
-            filters.append(Report.junior_doctor_id == junior_doctor_id)
+        if radiologist_id:
+            filters.append(Report.radiologist_id == radiologist_id)
         if senior_doctor_id:
             filters.append(Report.senior_doctor_id == senior_doctor_id)
+        director_base_filters = list(filters)  # snapshot before status filter
     elif patient_id:
         filters.append(Report.patient_id == patient_id)
 
     if status:
         filters.append(Report.status == status)
 
-    base_query = Report.find(*filters).sort(-Report.created_at)
+    base_query = Report.find(*filters).sort("-created_at")
     total = await base_query.count()
     reports = await base_query.skip((page - 1) * page_size).limit(page_size).to_list()
 
@@ -559,10 +562,22 @@ async def list_reports(
         return {"reports": result, "total": total, "page": page, "page_size": page_size}
 
     if actor.role == UserRole.DIRECTOR:
+        # Per-status counts using the same date/radiologist/senior_doctor filters
+        # but without the status filter — so the cards always show global totals
+        status_counts = {}
+        for st in ReportStatus:
+            status_counts[st.value] = await Report.find(*director_base_filters, Report.status == st).count()
+
         result = []
         for r in reports:
             item = await _enrich_report(r)
             result.append(item)
-        return {"reports": result, "total": total, "page": page, "page_size": page_size}
+        return {
+            "reports": result,
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "status_counts": status_counts,
+        }
 
     return [_to_response(r) for r in reports]

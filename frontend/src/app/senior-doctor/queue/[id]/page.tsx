@@ -67,15 +67,15 @@ export default function ReportReviewPage() {
   });
   const scan = scanData?.data;
 
-  // junior_doctor_name comes enriched from the get_report endpoint
-  const juniorDoctorName: string | null = report?.junior_doctor_name ?? null;
+  // radiologist_name comes enriched from the get_report endpoint
+  const juniorDoctorName: string | null = report?.radiologist_name ?? null;
 
   const reviewMutation = useMutation({
     mutationFn: (data: any) => reportsApi.review(reportId, data),
     onSuccess: () => {
       const msgs: Record<string, string> = {
         approve: "Report approved. Gemini AI explanation generated.",
-        reject: "Report rejected. Junior doctor notified.",
+        reject: "Report rejected. Radiologist notified.",
         re_evaluate: "Report sent back for re-evaluation.",
       };
       toast.success(msgs[action!] ?? "Review submitted");
@@ -245,10 +245,10 @@ export default function ReportReviewPage() {
             </div>
           )}
 
-          {/* Junior doctor notes */}
+          {/* Radiologist notes */}
           <div className="bg-card border border-border rounded-xl p-4 shadow-sm">
             <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
-              <FileText className="w-4 h-4" /> Junior Doctor Notes
+              <FileText className="w-4 h-4" /> Radiologist Notes
             </h3>
             {juniorDoctorName && (
               <p className="text-xs font-medium text-[#1a3c5e] dark:text-blue-400 mb-2">

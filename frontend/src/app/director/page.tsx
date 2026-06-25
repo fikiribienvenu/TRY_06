@@ -106,9 +106,9 @@ export default function DirectorDashboard() {
         />
         <StatCard
           title="Active Staff"
-          value={(s?.staff.junior_doctors ?? 0) + (s?.staff.senior_doctors ?? 0) + (s?.staff.receptionists ?? 0)}
+          value={(s?.staff.radiologists ?? 0) + (s?.staff.senior_doctors ?? 0) + (s?.staff.receptionists ?? 0)}
           icon={<UserCog className="w-6 h-6" />}
-          description={`${s?.staff.junior_doctors ?? 0} Jr · ${s?.staff.senior_doctors ?? 0} Sr · ${s?.staff.receptionists ?? 0} Rec`}
+          description={`${s?.staff.radiologists ?? 0} Rad · ${s?.staff.senior_doctors ?? 0} Sr · ${s?.staff.receptionists ?? 0} Rec`}
           color="teal"
         />
         <StatCard
@@ -161,7 +161,7 @@ export default function DirectorDashboard() {
           <SectionTitle>Staff Overview</SectionTitle>
           <div className="grid grid-cols-3 gap-4">
             {[
-              { label: "Junior Doctors",  value: s?.staff.junior_doctors ?? 0,  color: "bg-teal-500",   ring: "ring-teal-200 dark:ring-teal-800" },
+              { label: "Radiologists",  value: s?.staff.radiologists ?? 0,  color: "bg-teal-500",   ring: "ring-teal-200 dark:ring-teal-800" },
               { label: "Senior Doctors",  value: s?.staff.senior_doctors ?? 0,  color: "bg-blue-500",   ring: "ring-blue-200 dark:ring-blue-800" },
               { label: "Receptionists",   value: s?.staff.receptionists ?? 0,   color: "bg-orange-500", ring: "ring-orange-200 dark:ring-orange-800" },
             ].map((item) => (

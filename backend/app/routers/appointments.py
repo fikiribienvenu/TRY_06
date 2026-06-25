@@ -120,7 +120,7 @@ async def list_appointments(
         patient = await Patient.find_one(Patient.user_id == str(actor.id))
         if patient:
             filters.append(Appointment.patient_id == str(patient.id))
-    elif actor.role == UserRole.JUNIOR_DOCTOR:
+    elif actor.role == UserRole.RADIOLOGIST:
         filters.append(Appointment.doctor_id == str(actor.id))
     elif patient_id:
         filters.append(Appointment.patient_id == patient_id)
@@ -130,7 +130,7 @@ async def list_appointments(
 
     query = Appointment.find(*filters)
     total = await query.count()
-    apts = await query.sort(-Appointment.created_at).skip((page - 1) * page_size).limit(page_size).to_list()
+    apts = await query.sort("-created_at").skip((page - 1) * page_size).limit(page_size).to_list()
 
     # Enrich for Receptionist and Director with names
     if actor.role in (UserRole.RECEPTIONIST, UserRole.DIRECTOR):

@@ -99,12 +99,12 @@ async def list_patients(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     actor: User = Depends(require_role(
-        Role.DIRECTOR, Role.RECEPTIONIST, Role.JUNIOR_DOCTOR, Role.SENIOR_DOCTOR
+        Role.DIRECTOR, Role.RECEPTIONIST, Role.RADIOLOGIST, Role.SENIOR_DOCTOR
     )),
 ):
     query_filter = []
 
-    if actor.role == UserRole.JUNIOR_DOCTOR:
+    if actor.role == UserRole.RADIOLOGIST:
         query_filter.append(Patient.assigned_doctor_id == str(actor.id))
     elif doctor_id:
         query_filter.append(Patient.assigned_doctor_id == doctor_id)
@@ -187,8 +187,8 @@ async def assign_doctor(
         raise HTTPException(status_code=404, detail="Patient not found")
 
     doctor = await User.get(doctor_id)
-    if not doctor or doctor.role != UserRole.JUNIOR_DOCTOR:
-        raise HTTPException(status_code=404, detail="Junior doctor not found")
+    if not doctor or doctor.role != UserRole.RADIOLOGIST:
+        raise HTTPException(status_code=404, detail="Radiologist not found")
 
     patient.assigned_doctor_id = doctor_id
     patient.updated_at = datetime.now(timezone.utc)

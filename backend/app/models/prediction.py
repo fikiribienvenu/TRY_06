@@ -20,7 +20,7 @@ class Prediction(Document):
 
     ct_scan_id: str
     patient_id: str
-    performed_by: str              # junior doctor id
+    performed_by: str              # radiologist id
     prediction: CancerType
     confidence: float              # 0–100
     class_probabilities: Dict[str, float] = {}

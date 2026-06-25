@@ -107,7 +107,7 @@ export default function SeniorDoctorReportsPage() {
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>
-                {["Patient", "Junior Doctor", "AI Finding", "Status", "Reviewed", "Action"].map(h => (
+                {["Patient", "Radiologist", "AI Finding", "Status", "Reviewed", "Action"].map(h => (
                   <th key={h} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase">{h}</th>
                 ))}
               </tr>
@@ -122,7 +122,7 @@ export default function SeniorDoctorReportsPage() {
                       <p className="text-xs text-muted-foreground font-mono">{r.patient_code ?? r.patient_id?.slice(-8)}</p>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground text-xs">
-                      {r.junior_doctor_name ? `Dr. ${r.junior_doctor_name}` : "—"}
+                      {r.radiologist_name ? `Dr. ${r.radiologist_name}` : "—"}
                     </td>
                     <td className="px-4 py-3">
                       {r.prediction_label ? (

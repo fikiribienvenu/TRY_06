@@ -1,6 +1,6 @@
 from beanie import Document, Indexed
 from pydantic import EmailStr, Field
-from typing import Optional, List
+from typing import Optional
 from datetime import datetime, timezone
 from enum import Enum
 
@@ -8,7 +8,7 @@ from enum import Enum
 class UserRole(str, Enum):
     DIRECTOR = "director"
     SENIOR_DOCTOR = "senior_doctor"
-    JUNIOR_DOCTOR = "junior_doctor"
+    RADIOLOGIST = "radiologist"
     RECEPTIONIST = "receptionist"
     PATIENT = "patient"
 

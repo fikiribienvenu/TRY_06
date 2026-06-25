@@ -31,7 +31,7 @@ type FormData = z.infer<typeof schema>;
 const ROLE_ROUTES: Record<string, string> = {
   director: "/director",
   senior_doctor: "/senior-doctor",
-  junior_doctor: "/junior-doctor",
+  radiologist: "/radiologist",
   receptionist: "/receptionist",
   patient: "/patient",
 };

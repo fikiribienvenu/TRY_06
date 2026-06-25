@@ -25,7 +25,7 @@ class Priority(str, Enum):
 class CTScan(Document):
     patient_id: str
     requested_by: str              # receptionist id
-    assigned_doctor_id: Optional[str] = None   # junior doctor id
+    assigned_doctor_id: Optional[str] = None   # radiologist id
     file_path: str
     file_name: str
     file_type: str

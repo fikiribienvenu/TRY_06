@@ -16,7 +16,7 @@ const schema = z.object({
   email: z.string().email(),
   first_name: z.string().min(1),
   last_name: z.string().min(1),
-  role: z.enum(["junior_doctor", "senior_doctor", "receptionist"]),
+  role: z.enum(["radiologist", "senior_doctor", "receptionist"]),
   phone: z.string().optional(),
 });
 type FormData = z.infer<typeof schema>;
@@ -100,7 +100,7 @@ export default function UsersPage() {
           className="px-3 py-2 border border-border rounded-lg bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         >
           <option value="">All Roles</option>
-          <option value="junior_doctor">Junior Doctor</option>
+          <option value="radiologist">Radiologist</option>
           <option value="senior_doctor">Senior Doctor</option>
           <option value="receptionist">Receptionist</option>
         </select>
@@ -133,25 +133,27 @@ export default function UsersPage() {
                       {formatDate(user.last_login) || "Never"}
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => toggleMutation.mutate(user.id)}
-                          className="text-muted-foreground hover:text-primary transition"
-                          title={user.is_active ? "Disable" : "Enable"}
-                        >
-                          {user.is_active
-                            ? <ToggleRight className="w-5 h-5 text-green-500" />
-                            : <ToggleLeft className="w-5 h-5" />}
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (confirm(`Delete ${user.full_name}?`)) deleteMutation.mutate(user.id);
-                          }}
-                          className="text-muted-foreground hover:text-red-500 transition"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                      {user.role !== "director" && (
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => toggleMutation.mutate(user.id)}
+                            className="text-muted-foreground hover:text-primary transition"
+                            title={user.is_active ? "Disable" : "Enable"}
+                          >
+                            {user.is_active
+                              ? <ToggleRight className="w-5 h-5 text-green-500" />
+                              : <ToggleLeft className="w-5 h-5" />}
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (confirm(`Delete ${user.full_name}?`)) deleteMutation.mutate(user.id);
+                            }}
+                            className="text-muted-foreground hover:text-red-500 transition"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -217,7 +219,7 @@ export default function UsersPage() {
                   className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="">Select role...</option>
-                  <option value="junior_doctor">Junior Doctor</option>
+                  <option value="radiologist">Radiologist</option>
                   <option value="senior_doctor">Senior Doctor</option>
                   <option value="receptionist">Receptionist</option>
                 </select>

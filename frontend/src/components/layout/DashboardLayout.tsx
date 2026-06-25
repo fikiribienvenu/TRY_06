@@ -36,12 +36,13 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { href: "/receptionist/appointments", label: "Appointments", icon: <Calendar className="w-5 h-5" /> },
     { href: "/receptionist/scans", label: "Scan Status", icon: <Scan className="w-5 h-5" /> },
   ],
-  junior_doctor: [
-    { href: "/junior-doctor", label: "Dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
-    { href: "/junior-doctor/patients", label: "My Patients", icon: <Users className="w-5 h-5" /> },
-    { href: "/junior-doctor/scans", label: "CT Scans", icon: <Scan className="w-5 h-5" /> },
-    { href: "/junior-doctor/reports", label: "My Reports", icon: <ClipboardList className="w-5 h-5" /> },
-    { href: "/junior-doctor/schedule", label: "My Schedule", icon: <Calendar className="w-5 h-5" /> },
+  radiologist: [
+    { href: "/radiologist", label: "Dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
+    { href: "/radiologist/patients", label: "My Patients", icon: <Users className="w-5 h-5" /> },
+    { href: "/radiologist/scans", label: "CT Scans", icon: <Scan className="w-5 h-5" /> },
+    { href: "/radiologist/reports", label: "My Reports", icon: <ClipboardList className="w-5 h-5" /> },
+    { href: "/radiologist/schedule", label: "My Schedule", icon: <Calendar className="w-5 h-5" /> },
+    { href: "/radiologist/notifications", label: "Notifications", icon: <Bell className="w-5 h-5" /> },
   ],
   senior_doctor: [
     { href: "/senior-doctor", label: "Dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
@@ -60,7 +61,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
 const ROLE_COLORS: Record<UserRole, string> = {
   director: "bg-purple-600",
   senior_doctor: "bg-blue-600",
-  junior_doctor: "bg-teal-600",
+  radiologist: "bg-teal-600",
   receptionist: "bg-orange-600",
   patient: "bg-green-600",
 };

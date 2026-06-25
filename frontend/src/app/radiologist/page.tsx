@@ -8,7 +8,7 @@ import { Users, Scan, ClipboardList, Upload } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import Link from "next/link";
 
-export default function JuniorDoctorDashboard() {
+export default function RadiologistDashboard() {
   const { data: patients } = useQuery({
     queryKey: ["my-patients"],
     queryFn: () => patientsApi.list({ page_size: 5 }),
@@ -28,7 +28,7 @@ export default function JuniorDoctorDashboard() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold">Junior Doctor Dashboard</h1>
+        <h1 className="text-2xl font-bold">Radiologist Dashboard</h1>
         <p className="text-muted-foreground text-sm">Manage your assigned patients and CT scans</p>
       </div>
 
@@ -43,7 +43,7 @@ export default function JuniorDoctorDashboard() {
         <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold">My Patients</h3>
-            <Link href="/junior-doctor/patients" className="text-xs text-primary hover:underline">View all</Link>
+            <Link href="/radiologist/patients" className="text-xs text-primary hover:underline">View all</Link>
           </div>
           <div className="space-y-3">
             {(patients?.data?.patients ?? []).map((p: any) => (
@@ -55,7 +55,7 @@ export default function JuniorDoctorDashboard() {
                   <p className="font-medium text-sm">{p.full_name}</p>
                   <p className="text-xs text-muted-foreground">{p.patient_id} · Age {p.age}</p>
                 </div>
-                <Link href={`/junior-doctor/patients/${p.id}`} className="text-xs text-primary hover:underline">View</Link>
+                <Link href={`/radiologist/patients/${p.id}`} className="text-xs text-primary hover:underline">View</Link>
               </div>
             ))}
             {(patients?.data?.patients ?? []).length === 0 && (
@@ -68,7 +68,7 @@ export default function JuniorDoctorDashboard() {
         <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold">CT Scans Queue</h3>
-            <Link href="/junior-doctor/scans" className="text-xs text-primary hover:underline">View all</Link>
+            <Link href="/radiologist/scans" className="text-xs text-primary hover:underline">View all</Link>
           </div>
           <div className="space-y-3">
             {(scans?.data?.scans ?? []).map((s: any) => (
@@ -93,9 +93,9 @@ export default function JuniorDoctorDashboard() {
       {/* Quick actions */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { href: "/junior-doctor/patients", label: "View Patients", icon: <Users className="w-6 h-6" />, color: "bg-blue-50 text-blue-600" },
-          { href: "/junior-doctor/scans", label: "Upload CT Scan", icon: <Upload className="w-6 h-6" />, color: "bg-teal-50 text-teal-600" },
-          { href: "/junior-doctor/reports", label: "My Reports", icon: <ClipboardList className="w-6 h-6" />, color: "bg-purple-50 text-purple-600" },
+          { href: "/radiologist/patients", label: "View Patients", icon: <Users className="w-6 h-6" />, color: "bg-blue-50 text-blue-600" },
+          { href: "/radiologist/scans", label: "Upload CT Scan", icon: <Upload className="w-6 h-6" />, color: "bg-teal-50 text-teal-600" },
+          { href: "/radiologist/reports", label: "My Reports", icon: <ClipboardList className="w-6 h-6" />, color: "bg-purple-50 text-purple-600" },
         ].map((item) => (
           <Link
             key={item.href}

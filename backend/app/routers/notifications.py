@@ -17,7 +17,7 @@ async def get_notifications(
     if unread_only:
         filters.append(Notification.is_read == False)
 
-    query = Notification.find(*filters).sort(-Notification.created_at)
+    query = Notification.find(*filters).sort("-created_at")
     total = await query.count()
     notifs = await query.skip((page - 1) * page_size).limit(page_size).to_list()
 

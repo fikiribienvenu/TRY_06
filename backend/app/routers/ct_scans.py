@@ -10,6 +10,7 @@ from app.services import audit_service
 from app.models.audit_log import AuditAction
 from app.utils.file_handler import save_ct_scan
 from app.ai.predictor import predict_ct_scan
+from app.ai.ct_validator import validate_ct_scan
 
 router = APIRouter(prefix="/ct-scans", tags=["CT Scans"])
 
@@ -51,7 +52,7 @@ async def request_ct_scan(
 async def upload_ct_scan(
     scan_id: str,
     file: UploadFile = File(...),
-    actor: User = Depends(require_role(Role.JUNIOR_DOCTOR)),
+    actor: User = Depends(require_role(Role.RADIOLOGIST)),
 ):
     scan = await CTScan.get(scan_id)
     if not scan:
@@ -60,6 +61,18 @@ async def upload_ct_scan(
         raise HTTPException(status_code=403, detail="This scan is not assigned to you")
 
     file_info = await save_ct_scan(file, scan.patient_id)
+
+    # ── Validate it is actually a CT scan image ──────────────────────
+    is_valid, reason = validate_ct_scan(file_info["file_path"])
+    if not is_valid:
+        # Delete the invalid file
+        from app.utils.file_handler import delete_file
+        delete_file(file_info["file_path"])
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid image: {reason}",
+        )
+
     scan.file_path = file_info["file_path"]
     scan.file_name = file_info["file_name"]
     scan.file_type = file_info["file_type"]
@@ -85,7 +98,7 @@ async def upload_ct_scan(
 @router.post("/{scan_id}/predict")
 async def run_prediction(
     scan_id: str,
-    actor: User = Depends(require_role(Role.JUNIOR_DOCTOR)),
+    actor: User = Depends(require_role(Role.RADIOLOGIST)),
 ):
     scan = await CTScan.get(scan_id)
     if not scan:
@@ -94,6 +107,14 @@ async def run_prediction(
         raise HTTPException(status_code=400, detail="No CT image uploaded yet")
     if scan.assigned_doctor_id != str(actor.id):
         raise HTTPException(status_code=403, detail="Not assigned to you")
+
+    # Re-validate the image before running prediction
+    is_valid, reason = validate_ct_scan(scan.file_path)
+    if not is_valid:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot run prediction: {reason}",
+        )
 
     label, confidence, probs, heatmap_path = predict_ct_scan(scan.file_path)
 
@@ -149,7 +170,7 @@ async def list_scans(
     actor: User = Depends(get_current_active_user),
 ):
     filters = []
-    if actor.role == UserRole.JUNIOR_DOCTOR:
+    if actor.role == UserRole.RADIOLOGIST:
         filters.append(CTScan.assigned_doctor_id == str(actor.id))
     elif patient_id:
         filters.append(CTScan.patient_id == patient_id)

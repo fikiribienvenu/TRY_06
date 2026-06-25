@@ -30,7 +30,7 @@ def generate_report_pdf(
     ct_scan_date: str,
     prediction: str,
     confidence: float,
-    junior_doctor: str,
+    radiologist: str,
     senior_doctor: str,
     recommendations: list[str],
     gemini_explanation: Optional[str],
@@ -143,7 +143,7 @@ def generate_report_pdf(
     story.append(HRFlowable(width="100%", thickness=1, color=BORDER))
     story.append(Spacer(1, 0.1*inch))
     doc_data = [
-        ["Reviewed by (Junior):", junior_doctor, "Approved by (Senior):", senior_doctor],
+        ["Reviewed by (Radiologist):", radiologist, "Approved by (Senior):", senior_doctor],
     ]
     doc_table = Table(doc_data, colWidths=[1.8*inch, 2.2*inch, 1.8*inch, 2.2*inch])
     doc_table.setStyle(TableStyle([

@@ -64,7 +64,7 @@ export default function DirectorReportsPage() {
   const [activeTab, setActiveTab]         = useState<"reports" | "analytics">("reports");
   const [datePeriod, setDatePeriod]       = useState("all");
   const [statusFilter, setStatusFilter]   = useState("");
-  const [juniorDrId, setJuniorDrId]       = useState("");
+  const [radiologistId, setRadiologistId] = useState("");
   const [seniorDrId, setSeniorDrId]       = useState("");
   const [page, setPage]                   = useState(1);
   const [exporting, setExporting]         = useState(false);
@@ -72,26 +72,27 @@ export default function DirectorReportsPage() {
   const resetPage = useCallback(() => setPage(1), []);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["director-reports", datePeriod, statusFilter, juniorDrId, seniorDrId, page],
+    queryKey: ["director-reports", datePeriod, statusFilter, radiologistId, seniorDrId, page],
     queryFn: () =>
       reportsApi.list({
         date_filter:       datePeriod !== "all" ? datePeriod : undefined,
         status:            statusFilter || undefined,
-        junior_doctor_id:  juniorDrId  || undefined,
+        radiologist_id:    radiologistId || undefined,
         senior_doctor_id:  seniorDrId  || undefined,
         page,
         page_size: 20,
       }),
     enabled: activeTab === "reports",
   });
-  const reports: any[]  = data?.data?.reports ?? [];
-  const totalReports    = data?.data?.total   ?? 0;
+  const reports: any[]       = data?.data?.reports       ?? [];
+  const totalReports         = data?.data?.total         ?? 0;
+  const statusCounts: any    = data?.data?.status_counts ?? {};
 
   const { data: jdData } = useQuery({
-    queryKey: ["junior-doctors"],
-    queryFn: () => usersApi.list({ role: "junior_doctor", page_size: 100, is_active: true }),
+    queryKey: ["radiologists"],
+    queryFn: () => usersApi.list({ role: "radiologist", page_size: 100, is_active: true }),
   });
-  const juniorDoctors: any[] = jdData?.data?.users ?? jdData?.data ?? [];
+  const radiologists: any[] = jdData?.data?.users ?? jdData?.data ?? [];
 
   const { data: sdData } = useQuery({
     queryKey: ["senior-doctors"],
@@ -112,10 +113,10 @@ export default function DirectorReportsPage() {
 
   const stats = {
     total:     totalReports,
-    published: reports.filter((r) => r.status === "published").length,
-    approved:  reports.filter((r) => r.status === "approved").length,
-    rejected:  reports.filter((r) => r.status === "rejected").length,
-    pending:   reports.filter((r) => r.status === "submitted" || r.status === "under_review").length,
+    published: statusCounts["published"]    ?? 0,
+    approved:  statusCounts["approved"]     ?? 0,
+    rejected:  statusCounts["rejected"]     ?? 0,
+    pending:   (statusCounts["pending_review"] ?? 0) + (statusCounts["under_review"] ?? 0),
   };
 
   async function handleExportCsv() {
@@ -124,7 +125,7 @@ export default function DirectorReportsPage() {
       const res = await reportsApi.exportCsv({
         date_filter:      datePeriod !== "all" ? datePeriod : undefined,
         status:           statusFilter || undefined,
-        junior_doctor_id: juniorDrId  || undefined,
+        radiologist_id:   radiologistId || undefined,
         senior_doctor_id: seniorDrId  || undefined,
       });
       const blob = new Blob([res.data], { type: "text/csv" });
@@ -213,10 +214,10 @@ export default function DirectorReportsPage() {
                 </Select>
               </div>
               <div>
-                <label className="block text-xs text-muted-foreground mb-1">Junior Doctor</label>
-                <Select value={juniorDrId} onChange={(v) => { setJuniorDrId(v); resetPage(); }}>
-                  <option value="">All Junior Doctors</option>
-                  {juniorDoctors.map((d: any) => (
+                <label className="block text-xs text-muted-foreground mb-1">Radiologist</label>
+                <Select value={radiologistId} onChange={(v) => { setRadiologistId(v); resetPage(); }}>
+                  <option value="">All Radiologists</option>
+                  {radiologists.map((d: any) => (
                     <option key={d.id ?? d._id} value={d.id ?? d._id}>{d.full_name}</option>
                   ))}
                 </Select>
@@ -235,7 +236,7 @@ export default function DirectorReportsPage() {
 
           {/* Summary stats */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-            <StatCard label="Total (page)"  value={stats.total}     color="text-foreground" />
+            <StatCard label="Total Reports" value={stats.total}     color="text-foreground" />
             <StatCard label="Pending"       value={stats.pending}   color="text-amber-500" />
             <StatCard label="Approved"      value={stats.approved}  color="text-green-600 dark:text-green-400" />
             <StatCard label="Published"     value={stats.published} color="text-blue-600 dark:text-blue-400" />
@@ -259,7 +260,7 @@ export default function DirectorReportsPage() {
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50">
                     <tr>
-                      {["Patient", "AI Finding", "Junior Doctor", "Senior Doctor", "Status", "Submitted", "Published", ""].map((h) => (
+                      {["Patient", "AI Finding", "Radiologist", "Senior Doctor", "Status", "Submitted", "Published", ""].map((h) => (
                         <th key={h} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase whitespace-nowrap">
                           {h}
                         </th>
@@ -299,7 +300,7 @@ export default function DirectorReportsPage() {
                             )}
                           </td>
                           <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
-                            {r.junior_doctor_name ? `Dr. ${r.junior_doctor_name}` : "—"}
+                            {r.radiologist_name ? `Dr. ${r.radiologist_name}` : "—"}
                           </td>
                           <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
                             {r.senior_doctor_name ? `Dr. ${r.senior_doctor_name}` : <span className="italic">Not reviewed</span>}
@@ -332,12 +333,12 @@ export default function DirectorReportsPage() {
               <div className="px-4 py-3 border-t border-border flex items-center justify-between text-sm text-muted-foreground">
                 <span>
                   {reports.length} record{reports.length !== 1 ? "s" : ""} on this page
-                  {(juniorDrId || seniorDrId || statusFilter || datePeriod !== "all") && (
+                  {(radiologistId || seniorDrId || statusFilter || datePeriod !== "all") && (
                     <button
                       onClick={() => {
                         setDatePeriod("all");
                         setStatusFilter("");
-                        setJuniorDrId("");
+                        setRadiologistId("");
                         setSeniorDrId("");
                         resetPage();
                       }}

@@ -58,12 +58,12 @@ def _slot_out(s: ScheduleSlot) -> dict:
     }
 
 
-# ── Junior Doctor — manage own slots ──────────────────────────────────
+# ── Radiologist — manage own slots ──────────────────────────────────
 
 @router.get("/my-slots")
 async def get_my_slots(
     include_past: bool = Query(False),
-    actor: User = Depends(require_role(Role.JUNIOR_DOCTOR))
+    actor: User = Depends(require_role(Role.RADIOLOGIST))
 ):
     today = date_type.today().isoformat()
     query = [ScheduleSlot.doctor_id == str(actor.id)]
@@ -105,7 +105,7 @@ async def get_my_slots(
 @router.post("/my-slots", status_code=201)
 async def create_slot(
     body: SlotCreate,
-    actor: User = Depends(require_role(Role.JUNIOR_DOCTOR)),
+    actor: User = Depends(require_role(Role.RADIOLOGIST)),
 ):
     # Validate date is not in the past
     if body.date < date_type.today().isoformat():
@@ -138,7 +138,7 @@ async def create_slot(
 async def update_slot(
     slot_id: str,
     body: SlotUpdate,
-    actor: User = Depends(require_role(Role.JUNIOR_DOCTOR)),
+    actor: User = Depends(require_role(Role.RADIOLOGIST)),
 ):
     slot = await ScheduleSlot.get(slot_id)
     if not slot or slot.doctor_id != str(actor.id):
@@ -156,7 +156,7 @@ async def update_slot(
 @router.delete("/my-slots/{slot_id}", status_code=204)
 async def delete_slot(
     slot_id: str,
-    actor: User = Depends(require_role(Role.JUNIOR_DOCTOR)),
+    actor: User = Depends(require_role(Role.RADIOLOGIST)),
 ):
     slot = await ScheduleSlot.get(slot_id)
     if not slot or slot.doctor_id != str(actor.id):
@@ -172,10 +172,10 @@ async def delete_slot(
 async def get_all_doctors_availability(
     actor: User = Depends(require_role(Role.RECEPTIONIST, Role.DIRECTOR)),
 ):
-    """Returns all active junior doctors with their future available slots."""
+    """Returns all active radiologists with their future available slots."""
     today = date_type.today().isoformat()
     doctors = await User.find(
-        User.role == UserRole.JUNIOR_DOCTOR,
+        User.role == UserRole.RADIOLOGIST,
         User.is_active == True,
     ).to_list()
 
@@ -210,8 +210,8 @@ async def get_doctor_slots(
     """Get available (not full) future slots for a specific doctor."""
     today = date_type.today().isoformat()
     doctor = await User.get(doctor_id)
-    if not doctor or doctor.role != UserRole.JUNIOR_DOCTOR:
-        raise HTTPException(404, "Junior doctor not found")
+    if not doctor or doctor.role != UserRole.RADIOLOGIST:
+        raise HTTPException(404, "Radiologist not found")
 
     slots = await ScheduleSlot.find(
         ScheduleSlot.doctor_id == doctor_id,
@@ -305,7 +305,7 @@ async def book_slot(
             metadata={"appointment_id": str(apt.id), "slot_id": body.slot_id},
         )
 
-    # 9. Notify junior doctor in-app
+    # 9. Notify radiologist in-app
     await notification_service.create_notification(
         user_id=slot.doctor_id,
         notification_type=NotificationType.APPOINTMENT_CREATED,

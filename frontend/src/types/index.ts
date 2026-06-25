@@ -1,4 +1,4 @@
-export type UserRole = "director" | "senior_doctor" | "junior_doctor" | "receptionist" | "patient";
+export type UserRole = "director" | "senior_doctor" | "radiologist" | "receptionist" | "patient";
 
 export interface User {
   id: string;
@@ -77,7 +77,7 @@ export interface Report {
   patient_id: string;
   ct_scan_id: string;
   prediction_id: string;
-  junior_doctor_id: string;
+  radiologist_id: string;
   senior_doctor_id?: string;
   status: "draft" | "pending_review" | "under_review" | "approved" | "rejected" | "published" | "re_evaluation";
   junior_notes?: string;
@@ -124,7 +124,7 @@ export interface DashboardStats {
   today: { scans: number };
   monthly: { scans: number };
   staff: {
-    junior_doctors: number;
+    radiologists: number;
     senior_doctors: number;
     receptionists: number;
   };

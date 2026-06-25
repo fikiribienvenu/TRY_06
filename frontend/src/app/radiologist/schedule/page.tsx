@@ -18,7 +18,7 @@ function formatDateDisplay(dateStr: string) {
   return d.toLocaleDateString("en-US", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
 }
 
-export default function JuniorDoctorSchedulePage() {
+export default function RadiologistSchedulePage() {
   const qc = useQueryClient();
   const today = new Date().toISOString().split("T")[0];
 

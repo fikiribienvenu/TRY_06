@@ -97,12 +97,12 @@ function BookingModal({ patient, onClose }: { patient: Patient; onClose: () => v
           {/* ── STEP 1: Choose doctor ── */}
           {step === "doctor" && (
             <div className="space-y-3">
-              <p className="text-sm text-muted-foreground mb-3">Select an available junior doctor:</p>
+              <p className="text-sm text-muted-foreground mb-3">Select an available radiologist:</p>
               {loadingDoctors ? (
                 <div className="flex justify-center py-6"><LoadingSpinner /></div>
               ) : doctors.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground text-sm">
-                  No junior doctors found. Please create one first.
+                  No radiologists found. Please create one first.
                 </div>
               ) : doctors.map((doc: any) => (
                 <button

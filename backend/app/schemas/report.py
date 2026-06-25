@@ -31,7 +31,7 @@ class ReportResponse(BaseModel):
     patient_id: str
     ct_scan_id: str
     prediction_id: str
-    junior_doctor_id: str
+    radiologist_id: str
     senior_doctor_id: Optional[str] = None
     status: ReportStatus
     junior_notes: Optional[str] = None

@@ -26,7 +26,7 @@ class Patient(Document):
     emergency_contact_phone: Optional[str] = None
     blood_type: Optional[str] = None
     allergies: List[str] = []
-    assigned_doctor_id: Optional[str] = None   # junior doctor
+    assigned_doctor_id: Optional[str] = None   # radiologist
     registered_by: Optional[str] = None        # receptionist id
     is_active: bool = True
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

@@ -46,7 +46,7 @@ export default function DirectorReportDetailPage() {
     );
   }
 
-  const juniorName  = report.junior_doctor_name ?? report.junior_doctor_id?.slice(-8);
+  const juniorName  = report.radiologist_name ?? report.radiologist_id?.slice(-8);
   const seniorName  = report.senior_doctor_name ?? null;
   const isNormal    = pred?.prediction === "No Cancer" || pred?.prediction === "Normal";
 
@@ -109,7 +109,7 @@ export default function DirectorReportDetailPage() {
         <div className="bg-card border border-border rounded-xl p-4 shadow-sm">
           <div className="flex items-center gap-2 mb-2">
             <User className="w-4 h-4 text-primary" />
-            <h3 className="font-medium text-sm">Junior Doctor</h3>
+            <h3 className="font-medium text-sm">Radiologist</h3>
           </div>
           <p className="font-semibold">Dr. {juniorName ?? "—"}</p>
           {report.submitted_at && (

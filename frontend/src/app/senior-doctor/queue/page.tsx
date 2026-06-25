@@ -104,7 +104,7 @@ export default function ReviewQueuePage() {
 
                       {/* Submitted by + date */}
                       <p className="text-xs text-muted-foreground">
-                        Dr. {report.junior_doctor_name} &middot; submitted {formatDate(report.submitted_at)}
+                        Dr. {report.radiologist_name} &middot; submitted {formatDate(report.submitted_at)}
                       </p>
                     </div>
                   </div>
