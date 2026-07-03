@@ -36,4 +36,4 @@ for cls in CLASSES:
         shutil.copy2(img, dest_file)
         print(f"  [OK] {cls} -> sample_images/{safe_name}/sample_{i}.png")
 
-print(f"\nDone. Upload these images to test the Junior Doctor CT scan flow.")
+print(f"\nDone. Upload these images to test the Radiologist CT scan flow.")

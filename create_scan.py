@@ -8,7 +8,7 @@ client = MongoClient(uri, server_api=ServerApi('1'), serverSelectionTimeoutMS=10
 db = client['pulmoscan']
 
 patient = db.patients.find_one({})
-doctor  = db.users.find_one({'role': 'junior_doctor'})
+doctor  = db.users.find_one({'role': 'radiologist'})
 recept  = db.users.find_one({'role': 'receptionist'})
 
 patient_id = str(patient['_id'])
@@ -40,4 +40,4 @@ print(f"  patient: {patient.get('full_name', patient_id)}")
 print(f"  doctor:  {doctor.get('email')}")
 print(f"  status:  assigned")
 print()
-print("The Junior Doctor can now see and upload this scan at /junior-doctor/scans")
+print("The Radiologist can now see and upload this scan at /radiologist/scans")

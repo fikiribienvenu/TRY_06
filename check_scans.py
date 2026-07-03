@@ -5,9 +5,9 @@ uri = 'mongodb+srv://fikiribienvenu6_db_user:Try06123@cluster0.vz6amgm.mongodb.n
 client = MongoClient(uri, server_api=ServerApi('1'), serverSelectionTimeoutMS=10000)
 db = client['pulmoscan']
 
-# Get junior doctor
-jr = db.users.find_one({'role': 'junior_doctor'})
-print(f"Junior Doctor: {jr['email']}  id={jr['_id']}")
+# Get radiologist
+jr = db.users.find_one({'role': 'radiologist'})
+print(f"Radiologist: {jr['email']}  id={jr['_id']}")
 
 # Get patients
 patients = list(db.patients.find({}, {'patient_id': 1, 'full_name': 1, 'assigned_doctor_id': 1}))
